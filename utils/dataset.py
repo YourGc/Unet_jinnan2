@@ -25,10 +25,10 @@ class Dataset():
         self.N_Cls = N_CLS
 
     def valGenerator(self):
-        self.Generator_step(self.val_Idx)
+        return self.Generator_step(self.val_Idx)
 
     def tranGenerator(self):
-        self.Generator_step(self.train_Idx)
+        return self.Generator_step(self.train_Idx)
 
     def Generator_step(self,targetIdx):
         y_path = os.path.join(self.inDir, 'masks')
@@ -39,21 +39,29 @@ class Dataset():
         random.shuffle(xList)
 
         while True:
-            X_tmp = np.zeros((self.BatchSize,3,self.Img_size,self.Img_size))
-            y_tmp = np.zeros((self.BatchSize,self.N_Cls,self.Img_size,self.Img_size))
+            X_tmp = np.zeros((self.BatchSize, self.Img_size, self.Img_size, 3))
+            y_tmp = np.zeros((self.BatchSize, self.Img_size, self.Img_size, self.N_Cls))
             for count in range(len(targetIdx)):
                 batch_idx = count % self.BatchSize
                 idx = targetIdx[count]
                 # X
                 x_img = Image.open(os.path.join(x_path,xList[idx]))
-                x_img = (np.array(x_img)/255 - self.pixel_mean) / self.pixel_std
+                x_img = x_img.resize((self.Img_size, self.Img_size), Image.ANTIALIAS)
+                x_img = (255 - np.array(x_img)) / 255
+                for c in range(3):
+                    x_img[:, :, c] = (x_img[:, :, c] - self.pixel_mean[c]) / self.pixel_std[c]
                 X_tmp[batch_idx,:,:,:] = x_img
                 # y
                 y_batch_path = os.path.join(y_path,xList[idx].strip('.jpg'))
-                y_batch_tmp = np.zeros((self,N_CLS,self.Img_size,self.BatchSize))
+                y_batch_tmp = np.zeros((self.Img_size, self.Img_size, self.N_Cls))
                 for i in range(5):
-                    mask = Image.open(os.path.join(y_batch_path,str(i) + '.png'))
-                    y_batch_tmp[i, :, :] = np.array(mask)
+                    mask = Image.open(os.path.join(y_batch_path, str(i + 1) + '.png'))
+                    # print(mask.size)
+                    mask = mask.resize((self.Img_size, self.Img_size))
+                    # print(mask.size)
+                    mask = np.uint8(mask)
+                    # print(y_batch_tmp.shape)
+                    y_batch_tmp[:, :, i] = np.array(mask)
                 y_tmp[batch_idx,:,:,:] = y_batch_tmp
 
                 if count % self.BatchSize == 0 or count == len(self.train_Idx):

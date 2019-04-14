@@ -7,13 +7,11 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping,TensorBoard
 from keras import backend as K
 
-
-
-N_CLS = 5+1
+N_CLS = 5
 inDir = '/home/n01z3/dataset/dstl'
 IMG_SIZE = 640 #8的倍数
 SMOOTH = 1e-12
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 LogDir = '../logs/20190414'
 
 class Unet():
@@ -101,24 +99,28 @@ class Unet():
 
 
         self.model.fit_generator(generator = self.dataset.tranGenerator(),
-                            steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
-                            validation_data=self.dataset.valGenerator(),
-                            validation_steps=max(1, self.dataset.dataSize // self.batch_size),
-                            epochs=50,
-                            initial_epoch=0,
-                            callbacks=[logging, checkpoint])
+                                 steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
+                                 validation_data=self.dataset.valGenerator(),
+                                 validation_steps=max(1, self.dataset.dataSize // self.batch_size),
+                                 epochs=50,
+                                 initial_epoch=0,
+                                 pickle_safe=True,
+                                 verbose=1,
+                                 callbacks=[logging, checkpoint])
         self.model.save_weights(self.log_dir + 'trained_weights_stage_1.h5')
 
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
-        self.model.fit_generator(generator = self.dataset.tranGenerator,
-                            steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
-                            validation_data=self.dataset.valGenerator,
-                            validation_steps=max(1, self.dataset.dataSize // self.batch_size),
-                            epochs=50,
-                            initial_epoch=0,
-                            callbacks=[logging, checkpoint,reduce_lr,early_stopping])
+        self.model.fit_generator(generator=self.dataset.tranGenerator(),
+                                 steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
+                                 validation_data=self.dataset.valGenerator(),
+                                 validation_steps=max(1, self.dataset.dataSize // self.batch_size),
+                                 epochs=100,
+                                 initial_epoch=50,
+                                 verbose=1,
+                                 pickle_safe=True,
+                                 callbacks=[logging, checkpoint,reduce_lr,early_stopping])
         self.model.save_weights(self.log_dir + 'trained_final.h5')
 
 
