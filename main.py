@@ -19,5 +19,4 @@ if __name__ == '__main__':
     print('-----done-----')
     print('-----start train-----')
     unet_model.train()
-
-
+    print("hjello")
