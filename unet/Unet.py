@@ -11,7 +11,7 @@ N_CLS = 5
 inDir = '/home/n01z3/dataset/dstl'
 IMG_SIZE = 640 #8的倍数
 SMOOTH = 1e-12
-BATCH_SIZE = 4
+BATCH_SIZE = 2
 LogDir = '../logs/20190414'
 
 class Unet():

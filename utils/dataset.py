@@ -7,7 +7,7 @@ import random
 from  PIL import Image
 
 valPrecent = 0.2
-BatchSize = 8
+BatchSize = 2
 IMG_SIZE = 640
 SEED = 0
 N_CLS = 5
@@ -65,8 +65,11 @@ class Dataset():
                 y_tmp[batch_idx,:,:,:] = y_batch_tmp
 
                 if count % self.BatchSize == 0 or count == len(self.train_Idx):
-                    if count == len(self.train_Idx) : count = 0
-                    yield X_tmp,y_tmp
+                    if count == len(self.train_Idx):
+                        count = 0
+                        yield X_tmp[:batch_idx:, :, :], y_tmp[:batch_idx, :, :, :]
+                    else:
+                        yield X_tmp, y_tmp
 
 
     #采用random模块随机分割训练集和验证集
