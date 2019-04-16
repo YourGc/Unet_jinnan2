@@ -17,7 +17,7 @@ def img_mean_std(inDir):
         if not str(trainList[idx]).endswith('jpg') :continue
         filename = trainList[idx]
         img = Image.open(os.path.join(inDir, filename))
-        img = img.resize((IMG_SIZE,IMG_SIZE), Image.ANTIALIAS)
+        # img = img.resize((IMG_SIZE,IMG_SIZE), Image.ANTIALIAS)
         img = 255 - np.array(img)
         R_channel = R_channel + np.sum(img[:, :, 0])
         G_channel = G_channel + np.sum(img[:, :, 1])
@@ -45,7 +45,7 @@ def img_mean_std(inDir):
     for idx in range(len(trainList)):
         filename = trainList[idx]
         img = Image.open(os.path.join(inDir, filename))
-        img = img.resize((IMG_SIZE, IMG_SIZE), Image.ANTIALIAS)
+        #img = img.resize((IMG_SIZE, IMG_SIZE), Image.ANTIALIAS)
         img = 255 - np.array(img)
         img = img / 255
         w, h = img.shape[:2]

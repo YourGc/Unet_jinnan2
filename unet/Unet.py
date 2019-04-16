@@ -1,6 +1,6 @@
 # coding:utf-8
 
-
+import os
 from keras.models import Model
 from keras.layers import *
 from keras.optimizers import Adam
@@ -12,7 +12,8 @@ inDir = '/home/n01z3/dataset/dstl'
 IMG_SIZE = 640 #8的倍数
 SMOOTH = 1e-12
 BATCH_SIZE = 2
-LogDir = '../logs/20190414'
+LogDir = "/content/drive/'My\ Drive'/unet/logs/20190414"
+LogDir = os.path.join(r'content', r'drive', r'My Drive', r'unet/logs/0415')
 
 class Unet():
     def __init__(self,dataset):
@@ -94,8 +95,9 @@ class Unet():
     #learning from https://github.com/qqwweee/keras-yolo3/tree/master/yolo3
     def train(self):
         logging = TensorBoard(log_dir= self.log_dir)
-        checkpoint = ModelCheckpoint(self.log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
-                                     monitor='val_loss', save_weights_only=True, save_best_only=True, period=3)
+        checkpoint = ModelCheckpoint(self.log_dir + r'/' + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
+                                     monitor='val_loss',
+                                     verbose=1, save_weights_only=True, save_best_only=True, period=3)
 
 
         self.model.fit_generator(generator = self.dataset.tranGenerator(),
