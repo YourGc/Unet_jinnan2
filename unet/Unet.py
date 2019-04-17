@@ -1,6 +1,7 @@
 # coding:utf-8
 
 import os
+import tensorflow as tf
 from keras.models import Model
 from keras.layers import *
 from keras.optimizers import Adam
@@ -12,8 +13,10 @@ inDir = '/home/n01z3/dataset/dstl'
 IMG_SIZE = 640 #8的倍数
 SMOOTH = 1e-12
 BATCH_SIZE = 2
-LogDir = "/content/drive/'My\ Drive'/unet/logs/20190414"
-LogDir = os.path.join(r'content', r'drive', r'My Drive', r'unet/logs/0415')
+LogDir = "./logs/20190417"
+
+
+# LogDir = os.path.join(r'content', r'drive', r'My Drive', r'unet/logs/0415')
 
 class Unet():
     def __init__(self,dataset):
@@ -73,35 +76,30 @@ class Unet():
 
         model = Model(inputs=inputs, outputs=conv10)
         model.compile(optimizer=Adam(), loss='binary_crossentropy',
-                      metrics=[self.show_pre, self.show_true, self.jaccard_coef_int, 'accuracy'])
+                      metrics=[self.show_pre, self.jaccard_dis,
+                               self.jaccard_coef_int, 'accuracy'])
         model.summary()
         return model
 
     def show_pre(self, y_true, y_pred):
         return K.sum(y_pred)
 
-    def show_true(self, y_true, y_pred):
-        return K.sum(y_true)
 
     def jaccard_dis(self, y_true, y_pred):
-        class_loss = []
-        class_weight = [1.0, 1.0, 1.0, 1.0, 1.0]
-        for i in range(len(y_pred[2])):
-            class_loss.append(K.sum(y_true * y_pred, axis=[0, 1]))
+        y_pred_pos = K.round(K.clip(y_pred, 0, 1))
 
-        intersection = [class_loss[i] * class_weight[i] for i in range(5)]
-
-        sum_ = K.sum(y_true + y_pred, axis=[0, 1])
-
+        intersection = K.sum(y_true * y_pred_pos, axis=-1)
+        # intersection = [class_loss[i] * class_weight[i] for i in range(5)]
+        sum_ = K.sum(y_true + y_pred_pos, axis=-1)
         jac = (intersection + self.smooth) / (sum_ - intersection + self.smooth)
 
-        return K.mean(jac)
+        return K.mean(1 - jac)
 
     def jaccard_coef_int(self,y_true, y_pred):
         y_pred_pos = K.round(K.clip(y_pred, 0, 1))
 
-        intersection = K.sum(y_true * y_pred_pos, axis=[0, -1, -2])
-        sum_ = K.sum(y_true + y_pred, axis=[0, -1, -2])
+        intersection = K.sum(y_true * y_pred_pos, axis=[0, 1, 2])
+        sum_ = K.sum(y_true + y_pred, axis=[0, 1, 2])
         jac = (intersection + self.smooth) / (sum_ - intersection + self.smooth)
         return K.mean(jac)
 
@@ -109,7 +107,7 @@ class Unet():
     def train(self):
         logging = TensorBoard(log_dir= self.log_dir)
         checkpoint = ModelCheckpoint(self.log_dir + r'/' + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
-                                     monitor='val_jaccard_coef_int',
+                                     monitor='val_loss',
                                      verbose=1, save_weights_only=True, save_best_only=True, period=1)
 
 
@@ -124,8 +122,8 @@ class Unet():
                                  callbacks=[logging, checkpoint])
         self.model.save_weights(self.log_dir + 'trained_weights_stage_1.h5')
 
-        reduce_lr = ReduceLROnPlateau(monitor='val_jaccard_coef_int', factor=0.1, patience=3, verbose=1)
-        early_stopping = EarlyStopping(monitor='val_jaccard_coef_int', min_delta=0, patience=10, verbose=1)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
+        early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
         #
         # self.model.fit_generator(generator=self.dataset.tranGenerator(),
         #                          steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),

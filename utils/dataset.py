@@ -1,6 +1,6 @@
 # coding:utf-8
 import os
-import h5py
+import tensorflow as tf
 import numpy as np
 import random
 import keras.backend as K
@@ -64,17 +64,16 @@ class Dataset():
                     mask = mask / 255
                     mask = np.uint8(mask)
                     # print(mask.size)
-                    mask = np.uint8(mask)
                     # print(y_batch_tmp.shape)
-                    y_batch_tmp[:, :, i] = np.array(mask)
+                    y_batch_tmp[:, :, i] = mask
                 y_tmp[batch_idx,:,:,:] = y_batch_tmp
 
                 if count % self.BatchSize == 0 or count == len(self.train_Idx):
                     if count == len(self.train_Idx):
                         count = 0
-                        print(K.sum(y_tmp, axis=-1))
                         yield X_tmp[:batch_idx:, :, :], y_tmp[:batch_idx, :, :, :]
                     else:
+
                         yield X_tmp, y_tmp
 
 

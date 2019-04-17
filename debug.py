@@ -10,7 +10,7 @@ from PIL import Image
 
 # y
 y_tmp = np.zeros((2, 640, 640, 5))
-y_batch_path = r'./data/train/masks/0'
+y_batch_path = r'./data/train/masks/123'
 y_batch_tmp = np.zeros((640, 640, 5))
 for i in range(5):
     mask = Image.open(os.path.join(y_batch_path, str(i + 1) + '.png'))
@@ -26,4 +26,4 @@ for i in range(5):
     # print(y_batch_tmp.shape)
     y_batch_tmp[:, :, i] = np.array(mask)
 with tf.Session() as sess:
-    print(K.sum(y_batch_tmp, axis=[0, 1]).eval())
+    print(K.sum(y_batch_tmp).eval())
