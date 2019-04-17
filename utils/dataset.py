@@ -3,7 +3,7 @@ import os
 import h5py
 import numpy as np
 import random
-
+import keras.backend as K
 from  PIL import Image
 
 valPrecent = 0.2
@@ -58,6 +58,11 @@ class Dataset():
                     mask = Image.open(os.path.join(y_batch_path, str(i + 1) + '.png'))
                     # print(mask.size)
                     mask = mask.resize((self.Img_size, self.Img_size))
+                    mask = np.array(mask)
+                    mask[mask > 127] = 255
+                    mask[mask <= 127] = 0
+                    mask = mask / 255
+                    mask = np.uint8(mask)
                     # print(mask.size)
                     mask = np.uint8(mask)
                     # print(y_batch_tmp.shape)
@@ -67,6 +72,7 @@ class Dataset():
                 if count % self.BatchSize == 0 or count == len(self.train_Idx):
                     if count == len(self.train_Idx):
                         count = 0
+                        print(K.sum(y_tmp, axis=-1))
                         yield X_tmp[:batch_idx:, :, :], y_tmp[:batch_idx, :, :, :]
                     else:
                         yield X_tmp, y_tmp

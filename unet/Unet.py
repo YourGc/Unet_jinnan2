@@ -24,6 +24,8 @@ class Unet():
         self.model = self.get_unet()
         self.dataset = dataset
         self.log_dir = LogDir
+        if not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
 
 
     def get_unet(self):
@@ -71,14 +73,25 @@ class Unet():
 
         model = Model(inputs=inputs, outputs=conv10)
         model.compile(optimizer=Adam(), loss='binary_crossentropy',
-                      metrics=[self.jaccard_coef, self.jaccard_coef_int, 'accuracy'])
+                      metrics=[self.show_pre, self.show_true, self.jaccard_coef_int, 'accuracy'])
         model.summary()
         return model
 
-    def jaccard_coef(self,y_true, y_pred):
+    def show_pre(self, y_true, y_pred):
+        return K.sum(y_pred)
 
-        intersection = K.sum(y_true * y_pred, axis=[0, -1, -2])
-        sum_ = K.sum(y_true + y_pred, axis=[0, -1, -2])
+    def show_true(self, y_true, y_pred):
+        return K.sum(y_true)
+
+    def jaccard_dis(self, y_true, y_pred):
+        class_loss = []
+        class_weight = [1.0, 1.0, 1.0, 1.0, 1.0]
+        for i in range(len(y_pred[2])):
+            class_loss.append(K.sum(y_true * y_pred, axis=[0, 1]))
+
+        intersection = [class_loss[i] * class_weight[i] for i in range(5)]
+
+        sum_ = K.sum(y_true + y_pred, axis=[0, 1])
 
         jac = (intersection + self.smooth) / (sum_ - intersection + self.smooth)
 
@@ -96,33 +109,31 @@ class Unet():
     def train(self):
         logging = TensorBoard(log_dir= self.log_dir)
         checkpoint = ModelCheckpoint(self.log_dir + r'/' + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
-                                     monitor='val_loss',
-                                     verbose=1, save_weights_only=True, save_best_only=True, period=3)
+                                     monitor='val_jaccard_coef_int',
+                                     verbose=1, save_weights_only=True, save_best_only=True, period=1)
 
 
         self.model.fit_generator(generator = self.dataset.tranGenerator(),
                                  steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
                                  validation_data=self.dataset.valGenerator(),
                                  validation_steps=max(1, self.dataset.dataSize // self.batch_size),
-                                 epochs=50,
+                                 epochs=2,
                                  initial_epoch=0,
                                  pickle_safe=True,
                                  verbose=1,
                                  callbacks=[logging, checkpoint])
         self.model.save_weights(self.log_dir + 'trained_weights_stage_1.h5')
 
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
-        early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
-
-        self.model.fit_generator(generator=self.dataset.tranGenerator(),
-                                 steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
-                                 validation_data=self.dataset.valGenerator(),
-                                 validation_steps=max(1, self.dataset.dataSize // self.batch_size),
-                                 epochs=100,
-                                 initial_epoch=50,
-                                 verbose=1,
-                                 pickle_safe=True,
-                                 callbacks=[logging, checkpoint,reduce_lr,early_stopping])
-        self.model.save_weights(self.log_dir + 'trained_final.h5')
-
-
+        reduce_lr = ReduceLROnPlateau(monitor='val_jaccard_coef_int', factor=0.1, patience=3, verbose=1)
+        early_stopping = EarlyStopping(monitor='val_jaccard_coef_int', min_delta=0, patience=10, verbose=1)
+        #
+        # self.model.fit_generator(generator=self.dataset.tranGenerator(),
+        #                          steps_per_epoch=max(1, self.dataset.dataSize // self.batch_size),
+        #                          validation_data=self.dataset.valGenerator(),
+        #                          validation_steps=max(1, self.dataset.dataSize // self.batch_size),
+        #                          epochs=100,
+        #                          initial_epoch=50,
+        #                          verbose=1,
+        #                          pickle_safe=True,
+        #                          callbacks=[logging, checkpoint,reduce_lr,early_stopping])
+        # self.model.save_weights(self.log_dir + 'trained_final.h5')
