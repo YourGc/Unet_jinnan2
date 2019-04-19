@@ -8,11 +8,11 @@ from progressbar import *
 
 
 def make_npy():
-    path = r'../data/train/predict_npy'
+    path = r'../data/train/predict_npy_0419'
     if not os.path.exists(path):
         os.mkdir(path)
 
-    with open('../result0418am.json', 'r') as f:
+    with open('../submit0419pm.json', 'r') as f:
         result = json.load(f)
     f.close()
 
