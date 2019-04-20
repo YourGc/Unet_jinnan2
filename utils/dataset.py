@@ -89,3 +89,5 @@ class Dataset():
 
         return total_num,train_idx,val_idx
 
+    def data_argument(self):
+        pass
