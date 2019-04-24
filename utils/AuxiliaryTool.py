@@ -1,5 +1,6 @@
 # coding:utf-8
 import os
+import copy
 from PIL import Image
 import numpy as np
 import json
@@ -93,7 +94,7 @@ def ImgVertical():
     for i in range(img_nums):
         pbar.update(i)
 
-        info_tmp = imageInfo[i].copy()
+        info_tmp = copy.deepcopy(imageInfo[i])
 
         img = Image.open(img_path + r'/' + info_tmp['file_name'])
 
@@ -106,13 +107,14 @@ def ImgVertical():
 
         img_id = info_tmp['id']
         w, h = info_tmp['width'], info_tmp['height']
+        print(w, h)
 
         info_tmp['id'] = info_tmp['id'] + img_nums
         imageInfo.append(info_tmp)
 
         while idx < annos_nums:
             if imageAnnos[idx]['image_id'] != img_id: break
-            anno_tmp = imageAnnos[idx].copy()
+            anno_tmp = copy.deepcopy(imageAnnos[idx])
             anno_tmp['id'] = anno_tmp['id'] + annos_nums
             anno_tmp['image_id'] = info_tmp['id']
 
@@ -120,8 +122,9 @@ def ImgVertical():
                 rect[1] = h - rect[1]
 
             anno_tmp['bbox'][1] = h - anno_tmp['bbox'][1] - anno_tmp['bbox'][3]
+
             for seg_idx in range(1, len(anno_tmp['segmentation'][0]), 2):
-                anno_tmp['segmentation'][0][seg_idx] = w - anno_tmp['segmentation'][0][seg_idx]
+                anno_tmp['segmentation'][0][seg_idx] = h - anno_tmp['segmentation'][0][seg_idx]
 
             imageAnnos.append(anno_tmp)
             idx = idx + 1
@@ -133,5 +136,14 @@ def ImgVertical():
     f.close()
 
 
+def overturn():
+    img_path = r'../data/train/restricted'
+    img_names = os.listdir(img_path)
+
+    for name in img_names:
+        img = Image.open(os.path.join(img_path, name))
+        img = 255 - np.array(img)
+        Image.fromarray(img).save(os.path.join(img_path, name), quality=95)
+
 if __name__ == '__main__':
-    ImgVertical()
+    overturn()

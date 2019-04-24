@@ -26,9 +26,9 @@ def getMask(inDir,outDir):
     if not os.path.exists(outDir):
         os.mkdir(outDir)
 
-    with open(os.path.join(inDir,'train_restriction.json'), 'r') as f:
+    with open(os.path.join(inDir, 'new_anno.json'), 'r') as f:
         load_dict = json.load(f)
-        paths = os.listdir(os.path.join(inDir,'restricted'))
+        paths = os.listdir(os.path.join(inDir, 'test_mask'))
         #progressBar
         widgets = ['Progress: ', Percentage(), ' ', Bar('#'), ' ', Timer(),
                    ' ', ETA(), ' ']
@@ -37,7 +37,7 @@ def getMask(inDir,outDir):
         for i in range(len(paths)):
             im_path = paths[i]
             pbar.update(i)
-            im = cv.imread(os.path.join(inDir,'restricted') + '/' + im_path)
+            im = cv.imread(os.path.join(inDir, 'test_mask') + '/' + im_path)
             w,h = im.shape[:2]
             seg_list, label_list = get_index(int(im_path[:-4]), load_dict)
 
@@ -49,7 +49,9 @@ def getMask(inDir,outDir):
                 #print(masks[:,:,label_idx - 1].shape,mask.shape)
                 masks[:,:,label_idx - 1] += mask[:,:,0]
 
-            masks = np.transpose(masks,(2,1,0))
+            masks = np.transpose(masks, (2, 0, 1))
+            # masks = masks[:,::-1,:]
+            # print(masks.shape)
             #save mask
             savePicDir = os.path.join(outDir,im_path.split('.')[0])
             if not os.path.exists(savePicDir):
@@ -65,5 +67,5 @@ def getMask(inDir,outDir):
     f.close()
 
 
-
-
+if __name__ == '__main__':
+    getMask(inDir=r'../data/train', outDir=r'../data/train/test_masks')
