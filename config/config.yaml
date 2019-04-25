@@ -1,0 +1,19 @@
+masks:
+  -inDir: './data/train'
+  outDir: './data/train/masks'
+
+Train:
+  N_CLS: 5
+  IMG_SIZE: 640 #8的倍数
+  SMOOTH: 1e-12
+  BATCH_SIZE: 2
+  LogDir: "./logs/20190417"
+
+Dataset:
+  PIXEL_MEAN: [0.126947,0.119578,0.193871]
+  PIXEL_STD: [0.239344,0.155906,0.210617]
+  valPrecent: 0.2
+  BatchSize: 2
+  IMG_SIZE: 640
+  SEED: 0
+  N_CLS: 5
