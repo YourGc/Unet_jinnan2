@@ -145,5 +145,3 @@ def overturn():
         img = 255 - np.array(img)
         Image.fromarray(img).save(os.path.join(img_path, name), quality=95)
 
-if __name__ == '__main__':
-    overturn()
