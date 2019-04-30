@@ -23,3 +23,5 @@ keras : 2.2.4
 **I am so sorry that i can not try my implementation on competition(actrually we use another model), but cause of interest, 
 I'll finish the rest of the code.**
 
+# Data processing
+
